@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from abc import ABC
 
-dotenv_path = '../.env'
+dotenv_path = '.env'
 load_dotenv(dotenv_path)
 
 
