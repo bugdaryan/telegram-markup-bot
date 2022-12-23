@@ -1,13 +1,33 @@
-from app import db
-from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
+from app import db, app
+from sqlalchemy.dialects.postgresql import UUID
+import uuid
+import jwt
+import time
 
-class User(UserMixin, db.Model):
-    __tablename__ = "user"
+class User(db.Model):
+    __tablename__ = 'users'
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    username = db.Column(db.String(32), index=True)
+    password_hash = db.Column(db.String(300))
+    points = db.Column(db.Integer, default=0)
+    is_admin = db.Column(db.Boolean, default=False)
+
+    def hash_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def verify_password(self, password):
+        return check_password_hash(self.password_hash, password)
     
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(300), nullable=False, unique=True)
+    def generate_auth_token(self, expires_in = 3600):
+        return jwt.encode(
+                { 'id': str(self.id), 'exp': time.time() + expires_in},
+                app.config['SECRET_KEY'], algorithm='HS256')
 
-    def __repr__(self):
-        return '<User %r>' % self.username
+    @staticmethod
+    def verify_auth_token(token):
+        try:
+            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+        except:
+            return
+        return User.query.get(data['id'])
