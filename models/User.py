@@ -4,14 +4,16 @@ from sqlalchemy.dialects.postgresql import UUID
 import uuid
 import jwt
 import time
+from sqlalchemy.orm import relationship
 
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    username = db.Column(db.String(32), index=True)
+    username = db.Column(db.String(32), index=True, unique=True)
     password_hash = db.Column(db.String(300))
     points = db.Column(db.Integer, default=0)
     is_admin = db.Column(db.Boolean, default=False)
+    annotations = relationship('Annotation', backref='user', lazy=True)
 
     def hash_password(self, password):
         self.password_hash = generate_password_hash(password)
