@@ -11,6 +11,7 @@ r = RandomWord()
 def register():
 
     username, password = generate_random_username_password()
+    username = username.strip()
     
     user = User(username = username)
     user.hash_password(password)
