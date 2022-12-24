@@ -18,3 +18,4 @@ class Config(ABC):
     SECRET_KEY = os.getenv('BCRYPT_SECRET_KEY')
     TELEGRAM_SECRET_KEY = os.getenv('TELEGRAM_SECRET_KEY')
     PASSWORD_LENGTH = 10
+    INIT_SQL_FILE = 'db/init.sql'
