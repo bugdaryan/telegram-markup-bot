@@ -2,7 +2,7 @@ from flask_admin.form import ImageUploadField
 from flask_admin.model import BaseModelView
 from markupsafe import Markup
 from admin.ImageForm import ImageForm
-from models import Image
+from models import Image, User, Label
 from sqlalchemy import func
 from flask import request
 import flask_login as login
@@ -25,9 +25,7 @@ class ImageModelView(BaseModelView):
 
     def render_image(self, context, model, name):
         image_data = base64.b64encode(model.image_byte).decode('utf-8')
-
         image_uri = 'data:image/png;base64,{}'.format(image_data)
-
         return Markup('<img src="{}" width="100" height="100">'.format(image_uri))
 
     column_formatters = {
@@ -38,26 +36,25 @@ class ImageModelView(BaseModelView):
         for image_data in form.image_byte.data:
             image = Image()
             form.populate_obj(image)
-
             image.image_byte = image_data.read()
-
             self.session.add(image)
-
         self.session.commit()
         return redirect(url_for('.index_view'))
+
 
     def update_model(self, form, model):
         image_datas = form.image_byte.data
         if len(image_datas):
             model.image_byte = image_datas[0].read()
+        model.user = self.session.query(User).get(form.user.data)
+        model.label = self.session.query(Label).get(form.label.data)
         self.session.add(model)
-
         self.session.commit()
         return redirect(url_for('.index_view'))
 
 
     def scaffold_list_columns(self):
-        return ['id', 'image_byte']
+        return ['id', 'image_byte', 'user.username', 'label.name']
 
     def scaffold_sortable_columns(self):
         return {'id': 'asc'}
@@ -85,15 +82,12 @@ class ImageModelView(BaseModelView):
     
     def get_list(self, page, sort_field, sort_desc, search, filters, page_size=None):
         count_query = self.session.query(func.count('*')).select_from(self.model)
-
         if filters:
             count_query = self.apply_filters(count_query, filters)
         if search:
             count_query = self.apply_search(count_query, search)
-
         count = count_query.scalar()
-        query = self.model.query
-
+        query = self.session.query(self.model)
         if filters:
             query = self.apply_filters(query, filters)
         if search:
@@ -102,5 +96,4 @@ class ImageModelView(BaseModelView):
             query = self.apply_sort(query, sort_field, sort_desc)
         if page and page_size:
             query = self.apply_pagination(query, page, page_size)
-
         return count, query.all()
