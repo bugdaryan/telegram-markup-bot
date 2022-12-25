@@ -7,8 +7,9 @@
         {% if current_user.is_authenticated %}
         <h1>Markup bot admin panel</h1>
         <p>
-            Add, edit or delete objects from navigation menu. The see the statistics you can click on the link below.
+            Add, edit or delete objects from navigation menu. The download the images with labels click below.
         </p>
+        <p><a href="/download_images_labels">Download images and labels</a></p>
         {% else %}
         <form method="POST" action="">
             {{ form.hidden_tag() if form.hidden_tag }}
@@ -31,7 +32,6 @@
         {{ link | safe }}
         {% endif %}
     </div>
-
     <a class="btn btn-primary" href="/"><i class="icon-arrow-left icon-white"></i> Back</a>
 </div>
 {% endblock body %}

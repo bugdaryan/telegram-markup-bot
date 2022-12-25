@@ -1,0 +1,20 @@
+{% extends 'admin/master.html' %}
+{% block body %}
+{{ super() }}
+<div class="row-fluid">
+    {% block label_statistics %}
+    <h1>Label Statistics</h1>
+
+    <p>Total number of objects: {{ total_count }}</p>
+    <p>Number of labeled: {{ labeled_count }}</p>
+
+    <h2>Annotation counts for each label</h2>
+    <ul>
+    {% for label, count in label_counts.items() %}
+        <li>{{ label }}: {{ count }}</li>
+    {% endfor %}
+    </ul>
+    {% endblock %}
+    <a class="btn btn-primary" href="/"><i class="icon-arrow-left icon-white"></i> Back</a>
+</div>
+{% endblock body %}
