@@ -7,14 +7,29 @@ from telegram.replykeyboardremove import ReplyKeyboardRemove
 from telegram.ext.messagehandler import MessageHandler
 from telegram.ext.filters import Filters
 from config import Config
+import base64
 import requests
+from io import BytesIO
 
 updater = Updater(Config.TELEGRAM_SECRET_KEY,
                   use_context=True)
 
 app_url = 'http://localhost:5000/'
-tasks = ['Dog', 'Cat', 'Fish', 'Exit']
 creds = {'username': '', 'password': ''}
+image_data = {
+    'image_bytes': None,
+    'id': None
+}
+
+
+def get_labels():
+    labels_url = app_url + 'api/labels'
+    tasks = requests.get(labels_url).json()
+    tasks['label'].append('Exit')
+    tasks['id'].append(None)
+    return tasks
+
+tasks = get_labels()
 
 def reset_creds():
     creds['username'] = ''
@@ -80,32 +95,89 @@ Your password is {password}'''
 
     update.message.reply_text(text=reply, reply_markup=kbd)
 
+def get_image():
+    url = app_url + 'api/images'
+    res = requests.get(url, auth=(creds['username'], creds['password']))
+    if res.status_code != 200:
+        return None, None
+    res_json = res.json()
+    if not res_json['image_id']:
+        return None, None
+    img = res_json['image']
+    image_data = base64.b64decode(img)
+    image_file = BytesIO(image_data)
+    img_id = res_json['image_id']
+
+    return image_file, img_id
+
 def my_tasks(update: Update, context: CallbackContext):
-    kbd_layout = [[x] for x in tasks]
+    global tasks
+    
+    new_tasks = get_labels()
+    if set(new_tasks['label']) != set(tasks['label']):
+        tasks['label'] = new_tasks['label']
+        tasks['id'] = new_tasks['id']
+        update_tasks_handler(update, context)
+
+    kbd_layout = [[x] for x in tasks['label']]
     kbd = ReplyKeyboardMarkup(kbd_layout)
-    update.message.reply_photo(photo=open('Dog.jpg', 'rb'), reply_markup=kbd)
+
+    img, img_id = get_image()
+    image_data['image_bytes'] = img 
+    image_data['id'] = img_id
+
+    if not img_id:
+        update.message.reply_text('Sorry, currently there are no more images to annotate. Please come back later,')
+    else:
+        update.message.reply_photo(photo=img, reply_markup=kbd)
 
 
 def exit(update: Update, context: CallbackContext):
     start(update, context)
 
+def annotate_image(label_id):
+    url = app_url + 'api/annotations'
+    data = {
+        'image_id': image_data['id'],
+        'label_id': label_id
+    }
+    res = requests.post(url, json=data, auth=(creds['username'], creds['password']))
+    if res.status_code != 201:
+        print('Something went wrong')
 
-def echo(update: Update, context: CallbackContext):
-    """
-    message to handle any "Option [0-9]" Regrex.
-    """
+def annotate(update: Update, context: CallbackContext):
+    update.message.reply_text("You just clicked on '%s'" % update.message.text)
     if update.message.text == 'Exit':
         exit(update, context)
         return
-    update.message.reply_text("You just clicked on '%s'" % update.message.text)
+    label_id = tasks['id'][tasks['label'].index(update.message.text)]
+    annotate_image(label_id)
     my_tasks(update, context)
+
+def update_tasks_handler(update, context):
+    global tasks_handler
+
+    updater.dispatcher.remove_handler(tasks_handler)
+    updater.dispatcher.remove_handler(password_handler)
+    updater.dispatcher.remove_handler(login_handler)
+
+    tasks_handler = MessageHandler(Filters.regex(f'^({"|".join(tasks["label"])})$'), annotate)
+
+    updater.dispatcher.add_handler(tasks_handler)
+    updater.dispatcher.add_handler(password_handler)
+    updater.dispatcher.add_handler(login_handler)
 
 updater.dispatcher.add_handler(CommandHandler("start", start))
 updater.dispatcher.add_handler(MessageHandler(Filters.regex("Registration"), register))
 updater.dispatcher.add_handler(MessageHandler(Filters.regex("My Tasks"), my_tasks))
 updater.dispatcher.add_handler(MessageHandler(Filters.regex("Login"), enter_username))
-updater.dispatcher.add_handler(MessageHandler(Filters.regex(r"(?=("+'|'.join(tasks)+r"))"), echo))
-updater.dispatcher.add_handler(MessageHandler(Filters.regex("Exit"), exit))
-updater.dispatcher.add_handler(MessageHandler(Filters.text, enter_password))
-updater.dispatcher.add_handler(MessageHandler(Filters.text, login))
+
+tasks_handler = MessageHandler(Filters.regex(f'^({"|".join(tasks["label"])})$'), annotate)
+password_handler = MessageHandler(Filters.text, enter_password)
+login_handler = MessageHandler(Filters.text, login)
+
+updater.dispatcher.add_handler(tasks_handler)
+updater.dispatcher.add_handler(password_handler)
+updater.dispatcher.add_handler(login_handler)
+
 updater.start_polling()
