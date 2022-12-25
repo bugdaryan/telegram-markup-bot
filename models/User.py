@@ -13,7 +13,7 @@ class User(db.Model):
     password_hash = db.Column(db.String(300))
     points = db.Column(db.Integer, default=0)
     is_admin = db.Column(db.Boolean, default=False)
-    annotations = relationship('Annotation', backref='user', lazy=True)
+    images = relationship('Image', backref='user', lazy=True)
 
     def hash_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -49,6 +49,5 @@ class User(db.Model):
     def get_id(self):
         return self.id
 
-    # Required for administrative interface
     def __unicode__(self):
         return self.username
