@@ -1,12 +1,14 @@
-from app import app, db
+from app import app, db, auth
 from config import Config
-from models import User, Image, Annotation, Label
-from api import register, get_token, get_labels
-from flask_admin.contrib.sqla import ModelView
+from models import User, Image, Label
+from api import register, get_token, get_labels, post_annotation, get_image
 from flask_admin import Admin
-from admin import ImageModelView, MyAdminIndexView, LoginForm, MyModelView
-from flask import redirect, url_for
+from admin import ImageModelView, MyAdminIndexView, LoginForm, MyModelView, LabelStatisticsView
+from flask import redirect, url_for, send_file, make_response, g
 import flask_login as login
+import zipfile
+import io
+from flask_login import login_required, current_user
 
 def init_login():
     login_manager = login.LoginManager()
@@ -20,6 +22,32 @@ def init_login():
 @app.route('/', methods=['GET'])
 def index():
     return redirect(url_for('admin.index'))
+
+@app.route('/download_images_labels')
+@login_required
+def download_images_labels():
+    if not current_user.is_admin:
+        return 'Error: You do not have permission to access this endpoint.'
+
+    images_labels = [{'image_name': f'{image.id}.jpg', 'image_data': image.image_byte, 'label': image.label.name} for image in Image.query.all()]
+
+    csv_data = 'image_name,label\n'
+    for image_label in images_labels:
+        csv_row = f'{image_label["image_name"]},{image_label["label"]}\n'
+        csv_data += csv_row
+    
+    fileobj = io.BytesIO()
+    with zipfile.ZipFile(fileobj, 'w') as zf:
+        zf.writestr('images_labels.csv', csv_data)
+
+        for image_label in images_labels:
+            zf.writestr(image_label['image_name'], image_label['image_data'])
+
+    fileobj.seek(0)
+
+    response = make_response(send_file(fileobj, mimetype='application/zip'))
+    response.headers['Content-Disposition'] = 'attachment; filename=images_labels.zip'
+    return response
 
 if __name__ == '__main__':
     app.app_context().push()
@@ -39,9 +67,9 @@ if __name__ == '__main__':
 
     admin = Admin(app, name='admin', template_mode='bootstrap4', index_view=MyAdminIndexView(),  base_template='my_master.html')
     admin.add_view(MyModelView(User, db.session))
-    admin.add_view(MyModelView(Annotation, db.session))
     admin.add_view(MyModelView(Label, db.session))
     admin.add_view(ImageModelView(Image, db.session))
+    admin.add_view(LabelStatisticsView(name='Label Statistics'))
 
     app.debug = Config.DEBUG
     app.run(port=Config.PORT)
