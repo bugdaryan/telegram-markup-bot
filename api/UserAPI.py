@@ -1,4 +1,4 @@
-from flask import request, jsonify, abort, g
+from flask import jsonify, g
 from models import User
 from app import db, app, auth
 from wonderwords import RandomWord

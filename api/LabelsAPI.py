@@ -1,6 +1,6 @@
-from flask import request, jsonify, abort, g
+from flask import jsonify
 from models import Label
-from app import db, app, auth
+from app import app
 from config import Config
 
 @app.route('/api/labels', methods=['GET'])
