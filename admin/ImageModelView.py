@@ -1,32 +1,31 @@
 from flask_admin.form import ImageUploadField
-from flask_admin.model.template import macro
 from flask_admin.model import BaseModelView
 from markupsafe import Markup
 from admin.ImageForm import ImageForm
 from models import Image
 from sqlalchemy import func
 from flask import request
+import flask_login as login
 import base64
 from flask import redirect, url_for
 
 
 class ImageModelView(BaseModelView):
     def __init__(self, model, session, **kwargs):
-        # Pass the session object to the model view constructor
         super().__init__(model, **kwargs)
 
-        # Set the session as an instance variable
         self.session = session
 
     form_extra_fields = {
         'image_byte': ImageUploadField('Image', render_kw={"multiple": True})
     }
 
+    def is_accessible(self):
+        return login.current_user.is_authenticated
+
     def render_image(self, context, model, name):
-        # return Markup(f'<img src="data:image/png;base64,{model.image_byte} " width="100" height="100">')
         image_data = base64.b64encode(model.image_byte).decode('utf-8')
 
-        # Construct the data URI for the image
         image_uri = 'data:image/png;base64,{}'.format(image_data)
 
         return Markup('<img src="{}" width="100" height="100">'.format(image_uri))
@@ -87,30 +86,21 @@ class ImageModelView(BaseModelView):
     def get_list(self, page, sort_field, sort_desc, search, filters, page_size=None):
         count_query = self.session.query(func.count('*')).select_from(self.model)
 
-        # Apply any filters and search terms to the count query
         if filters:
             count_query = self.apply_filters(count_query, filters)
         if search:
             count_query = self.apply_search(count_query, search)
 
-        # Execute the count query and retrieve the count
         count = count_query.scalar()
-
-
-        # Query the database for all the records for the Image model
         query = self.model.query
 
-        # Apply any filters and search terms to the query
         if filters:
             query = self.apply_filters(query, filters)
         if search:
             query = self.apply_search(query, search)
-
-        # Apply the sort and pagination to the query
         if sort_field:
             query = self.apply_sort(query, sort_field, sort_desc)
         if page and page_size:
             query = self.apply_pagination(query, page, page_size)
 
-        # Return the list of records for the query
         return count, query.all()
