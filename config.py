@@ -19,3 +19,4 @@ class Config(ABC):
     TELEGRAM_SECRET_KEY = os.getenv('TELEGRAM_SECRET_KEY')
     PASSWORD_LENGTH = 10
     INIT_SQL_FILE = 'db/init.sql'
+    APP_BASE_URL = os.getenv('APP_BASE_URL')
