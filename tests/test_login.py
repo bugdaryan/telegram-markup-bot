@@ -1,4 +1,4 @@
-from app import app
+from main import app
 
 def register():
     url = '/api/register'
