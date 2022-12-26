@@ -13,6 +13,7 @@ class User(db.Model):
     password_hash = db.Column(db.String(300))
     points = db.Column(db.Integer, default=0)
     is_admin = db.Column(db.Boolean, default=False)
+    participate_in_markup = db.Column(db.Boolean, default=True)
     images = relationship('Image', backref='user', lazy=True)
 
     def hash_password(self, password):

@@ -6,6 +6,9 @@ from config import Config
 @app.route('/api/annotations', methods=['POST'])
 @auth.login_required
 def post_annotation():
+    user = g.user
+    if user.participate_in_markup == False:
+        return (jsonify({'message':'You are not allowed to participate in markup.'}), 403)
     label_id = request.json.get('label_id')
     image_id = request.json.get('image_id')
 
@@ -15,7 +18,6 @@ def post_annotation():
         return 
     if not label:
         return 
-    user = g.user
     image.label_id = label_id
     image.user_id = user.id
     db.session.add(image)
