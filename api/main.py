@@ -51,8 +51,7 @@ def download_images_labels():
 
 app.app_context().push()
 db.create_all()
-
-with open(Config.INIT_SQL_FILE, 'r') as f:
+with open(Config.SQL_INIT_FILE, 'r') as f:
     sql_script = f.readlines()
 sql_script = '\n'.join(sql_script)
 with app.app_context():

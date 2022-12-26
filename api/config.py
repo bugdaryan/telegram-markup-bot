@@ -5,7 +5,6 @@ from abc import ABC
 dotenv_path = '.env'
 load_dotenv(dotenv_path)
 
-
 class Config(ABC):
     ENV = os.getenv('ENV')
     PORT = os.getenv('PORT')
@@ -19,8 +18,6 @@ class Config(ABC):
 
     if DATABASE_URL:
         DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://')
-    TELEGRAM_SECRET_KEY = os.getenv('TELEGRAM_SECRET_KEY')
     PASSWORD_LENGTH = 10
-    INIT_SQL_FILE = 'db/init.sql'
-    APP_BASE_URL = os.getenv('APP_BASE_URL')
+    SQL_INIT_FILE = os.getenv('SQL_INIT_FILE')
     SECRET_KEY = os.getenv('SECRET_KEY')
