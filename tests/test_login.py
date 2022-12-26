@@ -1,9 +1,9 @@
-import requests
+from app import app
 from tests import app_url
 
 def register():
     url = app_url + 'api/register'
-    res = requests.post(url)
+    res = app.test_client.post(url)
     res_json = res.json()
 
     return res_json['username'], res_json['password']
@@ -11,7 +11,7 @@ def register():
 def test_login_correct():
     username, password = register()
     url = app_url + 'api/login'
-    res = requests.get(url, auth=(username, password))
+    res = app.test_client.get(url, auth=(username, password))
     res_json = res.json()
     assert res.status_code == 200
     assert 'duration' in res_json
@@ -20,23 +20,23 @@ def test_login_correct():
 def test_login_incorrect_username():
     username, password = register()
     url = app_url + 'api/login'
-    res = requests.get(url, auth=(username + '1', password))
+    res = app.test_client.get(url, auth=(username + '1', password))
     assert res.status_code == 401
 
 def test_login_incorrect_password():
     username, password = register()
     url = app_url + 'api/login'
-    res = requests.get(url, auth=(username, password + '1'))
+    res = app.test_client.get(url, auth=(username, password + '1'))
     assert res.status_code == 401
 
 def test_login_empty_username():
     username, password = register()
     url = app_url + 'api/login'
-    res = requests.get(url, auth=('', password))
+    res = app.test_client.get(url, auth=('', password))
     assert res.status_code == 401
 
 def test_login_empty_password():
     username, password = register()
     url = app_url + 'api/login'
-    res = requests.get(url, auth=(username, ''))
+    res = app.test_client.get(url, auth=(username, ''))
     assert res.status_code == 401
