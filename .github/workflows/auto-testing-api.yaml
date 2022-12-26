@@ -33,5 +33,5 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           ENV: development
           LOCAL_DB: postgres://postgres:postgres@localhost:5432/postgres
-          APP_BASE_URL: http://localhost:5000/
+          APP_BASE_URL: http://127.0.0.1:5000/
           PORT: 5000
