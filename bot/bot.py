@@ -77,9 +77,7 @@ def enter_password(update: Update, context: CallbackContext):
     else:
         login(update, context)
 
-
-def login(update: Update, context: CallbackContext):
-    creds['password'] = update.message.text
+def send_login(update: Update, context: CallbackContext):
     url = app_url + 'api/login'
     res = requests.get(url, auth=(creds['username'], creds['password']))
     if res.status_code == 200:
@@ -92,6 +90,10 @@ def login(update: Update, context: CallbackContext):
     else:
         update.message.reply_text(text="Something went wrong. Try again later")
 
+def login(update: Update, context: CallbackContext):
+    creds['password'] = update.message.text
+    send_login(update, context)
+
 
 def register(update: Update, context: CallbackContext):
     
@@ -103,16 +105,16 @@ def register(update: Update, context: CallbackContext):
     res_json = res.json()
     username = res_json['username']
     password = res_json['password']
-    kbd_layout = [['Login'], ['Registration'], ['Exit']]
-
-    kbd = ReplyKeyboardMarkup(kbd_layout)
 
 
     reply = f'''You have successfully registered
-Your login is {username}
+Your username is {username}
 Your password is {password}'''
 
-    update.message.reply_text(text=reply, reply_markup=kbd)
+    update.message.reply_text(text=reply)
+    creds['username'] = username
+    creds['password'] = password
+    send_login(update, context)
 
 def get_image():
     url = app_url + 'api/images'
@@ -163,10 +165,10 @@ def annotate_image(label_id):
     res = requests.post(url, json=data, auth=(creds['username'], creds['password']))
 
 def annotate(update: Update, context: CallbackContext):
-    update.message.reply_text(f"Image was labeled as '{update.message.text}'")
     if update.message.text == 'Exit':
         exit(update, context)
         return
+    update.message.reply_text(f"Image was labeled as '{update.message.text}'")
     label_id = tasks['id'][tasks['label'].index(update.message.text)]
     annotate_image(label_id)
     my_tasks(update, context)
