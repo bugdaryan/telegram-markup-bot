@@ -1,0 +1,36 @@
+name: auto-testing-api
+on: [push]
+jobs:
+  run:
+    runs-on: [ubuntu-latest]
+    container: docker://python:3.7-buster
+    services:
+      postgres:
+        image: postgres:latest
+        env:   
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - name: install-requirements
+        run: |
+          apt-get update -y
+          pip install -r requirements.txt
+
+      - name: run-unit-tests
+        run: |
+          pytest
+        env:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          ENV: development
+          LOCAL_DB: postgres://postgres:postgres@localhost:5432/postgres
+          APP_BASE_URL: http://localhost:5000/
