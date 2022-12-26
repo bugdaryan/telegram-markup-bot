@@ -2,7 +2,7 @@ from app import app
 from tests import app_url
 
 def test_register():
-    url = app_url + 'api/register'
+    url = 'api/register'
     res = app.test_client().post(url)
     assert res.status_code == 201
     res_json = res.json()
