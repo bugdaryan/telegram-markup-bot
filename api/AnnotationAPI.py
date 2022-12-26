@@ -15,9 +15,9 @@ def post_annotation():
     image = Image.query.filter(Image.id == image_id).first()
     label = Label.query.filter(Label.id == label_id).first()
     if not image:
-        return 
+        return (jsonify({}), 400)
     if not label:
-        return 
+        return (jsonify({}), 400)
     image.label_id = label_id
     image.user_id = user.id
     db.session.add(image)
