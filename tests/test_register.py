@@ -1,0 +1,12 @@
+import requests
+from tests import app_url
+
+def test_register():
+    url = app_url + 'api/register'
+    res = requests.post(url)
+    assert res.status_code == 201
+    res_json = res.json()
+    assert 'username' in res_json
+    assert 'password' in res_json
+    assert type(res_json['username']) == str
+    assert type(res_json['password']) == str
