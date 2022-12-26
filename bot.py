@@ -10,16 +10,18 @@ from config import Config
 import base64
 import requests
 from io import BytesIO
-import os
 from dotenv import load_dotenv
+import time
 
 dotenv_path = '.env'
 load_dotenv(dotenv_path)
 
 updater = Updater(Config.TELEGRAM_SECRET_KEY,
                   use_context=True)
+max_retries = 3
+sleep_time = 5
 
-app_url = os.environ.get('APP_BASE_URL')
+app_url = Config.APP_BASE_URL
 creds = {'username': '', 'password': ''}
 image_data = {
     'image_bytes': None,
@@ -28,10 +30,22 @@ image_data = {
 
 
 def get_labels():
-    labels_url = app_url + 'api/labels'
-    tasks = requests.get(labels_url).json()
-    tasks['label'].append('Exit')
-    tasks['id'].append(None)
+    num_retries = 0
+    tasks = {'label': [], 'id': []}
+    while num_retries < max_retries:
+        try:
+            labels_url = app_url + 'api/labels'
+            res = requests.get(labels_url)
+            if res.status_code == 200:
+                tasks = res.json()
+                tasks['label'].append('Exit')
+                tasks['id'].append(None)
+                break
+        except:
+            num_retries += 1
+            print('Error while getting labels. Retrying...', '\nNumber of retries left: ', max_retries - num_retries, '\n')
+            time.sleep(sleep_time)
+
     return tasks
 
 tasks = get_labels()
