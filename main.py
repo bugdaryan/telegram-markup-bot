@@ -49,27 +49,27 @@ def download_images_labels():
     response.headers['Content-Disposition'] = 'attachment; filename=images_labels.zip'
     return response
 
-if __name__ == '__main__':
-    app.app_context().push()
+app.app_context().push()
+db.create_all()
+
+with open(Config.INIT_SQL_FILE, 'r') as f:
+    sql_script = f.readlines()
+sql_script = '\n'.join(sql_script)
+with app.app_context():
     db.create_all()
-    
-    with open(Config.INIT_SQL_FILE, 'r') as f:
-        sql_script = f.readlines()
-    sql_script = '\n'.join(sql_script)
-    with app.app_context():
-        db.create_all()
-        for script in sql_script.split(';'):
-            script = script.replace('\n', '')
-            if len(script):
-                db.session.execute(script)
-                db.session.commit()
-    init_login()
+    for script in sql_script.split(';'):
+        script = script.replace('\n', '')
+        if len(script):
+            db.session.execute(script)
+            db.session.commit()
+init_login()
 
-    admin = Admin(app, name='admin', template_mode='bootstrap4', index_view=MyAdminIndexView(),  base_template='my_master.html')
-    admin.add_view(MyModelView(User, db.session))
-    admin.add_view(MyModelView(Label, db.session))
-    admin.add_view(ImageModelView(Image, db.session))
-    admin.add_view(LabelStatisticsView(name='Label Statistics'))
+admin = Admin(app, name='admin', template_mode='bootstrap4', index_view=MyAdminIndexView(),  base_template='my_master.html')
+admin.add_view(MyModelView(User, db.session))
+admin.add_view(MyModelView(Label, db.session))
+admin.add_view(ImageModelView(Image, db.session))
+admin.add_view(LabelStatisticsView(name='Label Statistics'))
 
+if __name__ == '__main__':
     app.debug = Config.DEBUG
     app.run(port=Config.PORT)
