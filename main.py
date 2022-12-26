@@ -72,4 +72,4 @@ admin.add_view(LabelStatisticsView(name='Label Statistics'))
 
 if __name__ == '__main__':
     app.debug = Config.DEBUG
-    app.run(port=Config.PORT)
+    app.run(host="0.0.0.0", port=Config.PORT)
