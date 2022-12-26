@@ -1,7 +1,12 @@
 from flask_admin import BaseView, expose
 from models import Image, Label
+import flask_login as login
 
 class LabelStatisticsView(BaseView):
+
+    def is_accessible(self):
+        return login.current_user.is_authenticated
+
     def render_template(self, template, **kwargs):
         return super().render_template('admin/index.html', **kwargs)
     

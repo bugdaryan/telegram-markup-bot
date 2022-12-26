@@ -13,6 +13,9 @@ class Config(ABC):
     if ENV == 'development':
         DEBUG = True
         DATABASE_URL = os.getenv('LOCAL_DB')
+    elif ENV == 'staging':
+        DEBUG = False
+        DATABASE_URL = os.getenv('STAGING_DB')
 
     DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://')
     TELEGRAM_SECRET_KEY = os.getenv('TELEGRAM_SECRET_KEY')
