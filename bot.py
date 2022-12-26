@@ -10,11 +10,16 @@ from config import Config
 import base64
 import requests
 from io import BytesIO
+import os
+from dotenv import load_dotenv
+
+dotenv_path = '.env'
+load_dotenv(dotenv_path)
 
 updater = Updater(Config.TELEGRAM_SECRET_KEY,
                   use_context=True)
 
-app_url = 'http://localhost:5000/'
+app_url = os.environ.get('APP_BASE_URL')
 creds = {'username': '', 'password': ''}
 image_data = {
     'image_bytes': None,
@@ -127,7 +132,7 @@ def my_tasks(update: Update, context: CallbackContext):
     image_data['id'] = img_id
 
     if not img_id:
-        update.message.reply_text('Sorry, currently there are no more images to annotate. Please come back later,')
+        update.message.reply_text('Sorry, currently there are no more images for you to annotate. Please come back later.')
     else:
         update.message.reply_photo(photo=img, reply_markup=kbd)
 
@@ -142,11 +147,9 @@ def annotate_image(label_id):
         'label_id': label_id
     }
     res = requests.post(url, json=data, auth=(creds['username'], creds['password']))
-    if res.status_code != 201:
-        print('Something went wrong')
 
 def annotate(update: Update, context: CallbackContext):
-    update.message.reply_text("You just clicked on '%s'" % update.message.text)
+    update.message.reply_text(f"Image was labeled as '{update.message.text}'")
     if update.message.text == 'Exit':
         exit(update, context)
         return
