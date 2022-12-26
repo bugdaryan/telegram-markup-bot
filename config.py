@@ -19,3 +19,4 @@ class Config(ABC):
     PASSWORD_LENGTH = 10
     INIT_SQL_FILE = 'db/init.sql'
     APP_BASE_URL = os.getenv('APP_BASE_URL')
+    SECRET_KEY = os.getenv('SECRET_KEY')

@@ -35,3 +35,4 @@ jobs:
           LOCAL_DB: postgres://postgres:postgres@postgres:5432/postgres
           APP_BASE_URL: http://127.0.0.1:5000/
           PORT: 5000
+          SECRET_KEY: CivIEaNuJqy/j4dlr72f/qWk
