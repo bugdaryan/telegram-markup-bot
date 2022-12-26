@@ -3,7 +3,7 @@ from tests import app_url
 
 def test_register():
     url = app_url + 'api/register'
-    res = app.test_client.post(url)
+    res = app.test_client().post(url)
     assert res.status_code == 201
     res_json = res.json()
     assert 'username' in res_json
