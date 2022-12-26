@@ -17,7 +17,8 @@ class Config(ABC):
         DEBUG = False
         DATABASE_URL = os.getenv('STAGING_DB')
 
-    DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://')
+    if DATABASE_URL:
+        DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://')
     TELEGRAM_SECRET_KEY = os.getenv('TELEGRAM_SECRET_KEY')
     PASSWORD_LENGTH = 10
     INIT_SQL_FILE = 'db/init.sql'
