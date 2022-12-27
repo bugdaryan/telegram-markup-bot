@@ -27,7 +27,7 @@ To run all-in-one docker-compose, run the following command:
 `docker-compose build`
 `docker-compose up`
 
-Which will run the PostgreSQL database at `postgres://postgres:postgres@localhost:5432/postgres`, the API at `http://localhost:5000`, and the telegram bot.
+Which will run the PostgreSQL database at `postgres://postgres:postgres@localhost:5432/postgres`, the API and admin panel at `http://localhost:5000`, the default credentials for admin is username=`admin`, password=`admin`, and the telegram bot.
 Access the application at http://localhost:5000
 
 
