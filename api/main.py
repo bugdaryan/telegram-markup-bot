@@ -29,7 +29,7 @@ def download_images_labels():
     if not current_user.is_admin:
         return 'Error: You do not have permission to access this endpoint.'
 
-    images_labels = [{'image_name': f'{image.id}.jpg', 'image_data': image.image_byte, 'label': image.label.name} for image in Image.query.all()]
+    images_labels = [{'image_name': f'{image.id}.jpg', 'image_data': image.image_byte, 'label': image.label.name} for image in Image.filter(Image.label_id != None).all()]
 
     csv_data = 'image_name,label\n'
     for image_label in images_labels:
