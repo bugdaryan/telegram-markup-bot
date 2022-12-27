@@ -19,5 +19,4 @@ class Config(ABC):
     if DATABASE_URL:
         DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://')
     PASSWORD_LENGTH = 10
-    SQL_INIT_FILE = os.getenv('SQL_INIT_FILE')
     SECRET_KEY = os.getenv('SECRET_KEY')

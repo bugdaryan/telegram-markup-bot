@@ -9,6 +9,8 @@ import flask_login as login
 import zipfile
 import io
 from flask_login import login_required, current_user
+import glob
+import time
 
 def init_login():
     login_manager = login.LoginManager()
@@ -49,18 +51,30 @@ def download_images_labels():
     response.headers['Content-Disposition'] = 'attachment; filename=images_labels.zip'
     return response
 
+def populate_database():
+    with app.app_context():
+        if User.query.filter_by(username='admin').first():
+            return
+        admin_user = User(username='admin', is_admin=True)
+        admin_user.hash_password('admin')
+        labels = [Label(name='Dog'), Label(name='Cat'), Label(name='Fish')]
+        img_path = glob.glob('sample_data/*.jpg')
+        for path in img_path:
+            with open(path, 'rb') as f:
+                img_byte = f.read()
+            img = Image(image_byte=img_byte)
+            db.session.add(img)
+        
+        for label in labels:
+            db.session.add(label)
+
+        db.session.add(admin_user)
+        db.session.commit()
+        
+time.sleep(5)
 app.app_context().push()
 db.create_all()
-with open(Config.SQL_INIT_FILE, 'r') as f:
-    sql_script = f.readlines()
-sql_script = '\n'.join(sql_script)
-with app.app_context():
-    db.create_all()
-    for script in sql_script.split(';'):
-        script = script.replace('\n', '')
-        if len(script):
-            db.session.execute(script)
-            db.session.commit()
+populate_database()
 init_login()
 
 admin = Admin(app, name='admin', template_mode='bootstrap4', index_view=MyAdminIndexView(),  base_template='my_master.html')
